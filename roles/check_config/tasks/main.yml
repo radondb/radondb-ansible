@@ -1,0 +1,40 @@
+---
+# Common Tasks
+
+- name: Ensure radon host exists
+  fail: msg="One radon master host must be configured. Please check inventory.ini."
+  when: groups['master'] | length != 1
+
+- name: Ensure backend host exists
+  fail: msg="No backend host is specified. Please check inventory.ini."
+  when: groups['backend'] | length < 1
+
+- name: Ensure monitor servers exists
+  fail: msg="monitor servers should be specified."
+  when: groups['monitor'] | length < 1
+
+- name: Check whether server_id is configured
+  fail: msg="server_id in mysql node must be configured."
+  when: hostvars[item]['server_id'] is undefined
+  with_items:
+    - "{{ groups['mysql']}}"
+
+- name: Get 'mysql' server_id
+  set_fact:
+    all_serverid: |-
+      [
+      {% for host in groups['mysql'] -%}
+        {% set server_id = hostvars[host].server_id -%}
+        "{{ server_id }}",
+      {% endfor %}
+      ]
+  run_once: true
+
+- name: Check whether every node in mysql has different server_id
+  fail: msg="server_id in ervery mysql node must be different."
+  when: all_serverid | unique | length != groups['mysql'] | length
+
+- name: Close old SSH control master processes
+  raw: ps aux | grep ansible-ssh | grep -v grep | awk '{print $2}' | xargs kill -9 ; true
+  ignore_errors: true
+  changed_when: false

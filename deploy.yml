@@ -1,0 +1,63 @@
+- name: check config locally
+  hosts: localhost
+  any_errors_fatal: true
+  tags:
+    - always
+  roles:
+    - check_config
+
+- name: check system environment
+  hosts: all
+  any_errors_fatal: true
+  tags:
+    - always
+  roles:
+    - check_system
+
+- name: configuring system parameters
+  hosts: all
+  remote_user: root
+  gather_facts: false
+  sudo: yes
+  roles:
+    - common
+
+- name: deploy mysql
+  hosts: mysql
+  gather_facts: true
+  sudo: yes
+  roles:
+    - mysql
+
+- name: deploy radon
+  hosts: radon
+  gather_facts: true
+  sudo: yes
+  roles:
+    - radon_common
+
+- name: deploy node_exporter
+  hosts: all
+  sudo: yes
+  roles:
+    - node_exporter
+
+- name: deploy mysql_exporter
+  hosts: mysql
+  sudo: yes
+  roles:
+    - mysqld_exporter
+
+- name: deploy prometheus
+  hosts: monitor
+  gather_facts: true
+  sudo: yes
+  roles:
+    - prometheus
+
+- name: deploy grafana
+  hosts: monitor
+  gather_facts: true
+  sudo: yes
+  roles:
+    - grafana

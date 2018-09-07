@@ -1,0 +1,38 @@
+{
+        "proxy": {
+                "meta-dir": "{{deploy_dir}}/data/metainfo",
+                "endpoint": ":{{endpoint}}",
+                "twopc-enable": {{twopc_enable}},
+                "max-connections": {{max_connections}},
+                "max-result-size": {{max_result_size}},
+                "ddl-timeout": {{ddl_timeout}},
+                "query-timeout": {{query_timeout}},
+                "peer-address": "{{ansible_default_ipv4.address}}:{{peer_port}}",
+                "backup-default-engine": "{{backup_default_engine}}"
+        },
+        "audit": {
+                "mode": "{{mode}}",
+                "audit-dir": "{{deploy_dir}}/data/audit",
+                "max-size": {{max_size}},
+                "expire-hours": {{expire_hours}}
+        },
+        "router": {
+                "slots-readonly": {{slots_readonly}},
+                "blocks-readonly": {{blocks_readonly}}
+        },
+        "binlog": {
+                "binlog-dir": "{{deploy_dir}}/data/binlog",
+                "max-size": {{max_size}},
+                "relay-workers": {{relay_workers}},
+                "relay-wait-ms": {{relay_wait_ms}},
+                "enable-binlog": {{enable_binlog}},
+                "enable-relay": {{enable_relay}},
+                "parallel-type": {{parallel_type}}
+        },
+        "log": {
+                "level": "{{level}}"
+        },
+        "monitor": {
+            "web-monitor-port": "{{monitor_port}}"
+        }
+}

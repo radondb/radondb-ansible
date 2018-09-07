@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+mkdir -p {{ deploy_dir }}/etc
+mv /tmp/my.cnf {{ deploy_dir }}/etc/
+mv /tmp/mysql.server {{ deploy_dir }}/bin
+
+mkdir -p {{ mysql_data_dir }}
+mkdir -p {{ mysql_data_dir }}/tokudb.redos
+mkdir -p {{ mysql_data_dir }}/tokudb.datas
+mkdir -p {{ deploy_dir }}/log
+chown -R {{deploy_usr}}:{{group_name}} {{ deploy_dir }} {{ mysql_data_dir }}
+###init mysql db###
+{{ deploy_dir }}/bin/mysqld --defaults-file={{ deploy_dir }}/etc/my.cnf --user={{deploy_usr}} --initialize-insecure
+{{ deploy_dir }}/bin/mysql.server start >/dev/null 2>&1 &
+sleep 5
+rm -rf /tmp/$(basename $0)

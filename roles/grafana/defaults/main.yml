@@ -1,0 +1,16 @@
+---
+grafana_log_filename: "grafana.log"
+
+grafana_admin_user: "admin"
+grafana_admin_password: "admin"
+
+grafana_api_keys:
+ - name: "grafana_apikey"
+   role: "Admin"
+
+grafana_exec_vars_only: false
+
+grafana_version: 5.2.3
+
+# docker settings
+grafana_tag: 5.2.3

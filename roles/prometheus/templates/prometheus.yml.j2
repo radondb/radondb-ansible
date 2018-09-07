@@ -1,0 +1,76 @@
+---
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+  external_labels:
+    cluster: '{{ cluster_name }}'
+{% for item in prometheus_extra_labels %}
+    {{ item.label }}: "{{ item.value }}"
+{% endfor %}
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      # - alertmanager:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+{% set radon_addrs = [] -%}
+{% for host in groups.radon -%}
+  {% set radon_ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) -%}
+  {% set radon_port = hostvars[host].monitor_port -%}
+  {% set _ = radon_addrs.append("%s:%s" % (radon_ip, radon_port)) -%}
+{% endfor -%}
+
+{% set mysql_addrs = [] -%}
+{% for host in groups.mysql -%}
+  {% set mysql_ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) -%}
+  {% set mysqld_exporter_port = hostvars[host].mysqld_exporter_port -%}
+  {% set _ = mysql_addrs.append("%s:%s" % (mysql_ip, mysqld_exporter_port)) -%}
+{% endfor -%}
+
+{% set node_exporter_addrs = [] -%}
+{% for i in groups.radon, groups.mysql, groups.monitor -%}
+  {% for host in i -%}
+    {% set node_exporter_ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) -%}
+    {% set _ = node_exporter_addrs.append("%s:%s" % (node_exporter_ip, node_exporter_port)) -%}
+  {% endfor -%}
+{% endfor -%}
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'radon'
+
+      # metrics_path defaults to '/metrics'
+      # scheme defaults to 'http'.
+
+    static_configs:
+{% for radon_addr in radon_addrs %}
+    - targets: ['{{ radon_addr }}']
+      labels:
+        instance: "{{radon_addr.split(':')[0]}}"
+{% endfor %}
+
+  - job_name: 'mysql'
+    static_configs:
+{% for mysql_addr in mysql_addrs %}
+    - targets: ['{{ mysql_addr }}']
+      labels:
+        instance: "{{mysql_addr.split(':')[0]}}"
+{% endfor %}
+
+  - job_name: 'node'
+    static_configs:
+{% for node_exporter_addr in node_exporter_addrs %}
+    - targets: ['{{ node_exporter_addr }}']
+      labels:
+        instance: "{{node_exporter_addr.split(':')[0]}}"
+{% endfor %}

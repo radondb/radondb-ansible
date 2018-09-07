@@ -1,0 +1,8 @@
+---
+
+# default configuration for node_exporter
+
+mysqld_exporter_log_level: info
+mysqld_exporter_log_filename: "mysqld_exporter.log"
+
+mysqld_exporter_tag: v0.11.0

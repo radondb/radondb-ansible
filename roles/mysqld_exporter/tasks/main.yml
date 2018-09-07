@@ -1,0 +1,23 @@
+---
+- name: deploy mysqld_exporter binary
+  copy: src="{{playbook_dir}}/resources/mysqld_exporter" dest="{{ exporter_dir }}/bin" mode=0755
+
+- name: copy run_mysqld_exporter.sh
+  template:
+    src: "run_mysqld_exporter.sh.j2"
+    dest: "{{exporter_dir}}/scripts/run_mysqld_exporter.sh"
+    mode: "0755"
+    backup: yes
+
+- name: copy .my.cnf
+  template: src=.my.cnf.j2 dest={{ exporter_dir }}/bin/.my.cnf owner=root group=root mode=0644
+
+- name: deploy systemd
+  include_role:
+    name: systemd
+  vars:
+    this_role_name: mysqld_exporter
+    service_name: mysqld_exporter-{{ mysqld_exporter_port }}
+    script_dir: "{{exporter_dir}}/scripts"
+    server_user: root
+    server_group: root

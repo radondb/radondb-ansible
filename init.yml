@@ -1,0 +1,116 @@
+- name: configuring radon_master
+  hosts: master
+  gather_facts: true
+  sudo: yes
+  roles:
+    - radon_master
+
+- hosts: monitor
+  tags:
+    - grafana
+  roles:
+    - { role: grafana, grafana_exec_vars_only: true }
+  tasks:
+    - name: Ensure grafana API Key directory exists
+      file:
+        path: "{{ playbook_dir }}/conf/keys"
+        state: directory
+      delegate_to: localhost
+
+    - name: Check grafana API Key list
+      uri:
+        url: "http://{{ ansible_host }}:{{ grafana_port }}/api/auth/keys"
+        user: "{{ grafana_admin_user }}"
+        password: "{{ grafana_admin_password }}"
+        force_basic_auth: yes
+        return_content: yes
+      register: existing_api_keys
+
+    - name: Check grafana API Key file existed
+      stat:
+        path: "{{ playbook_dir }}/conf/keys/grafana_apikey.key"
+      register:  grafana_apikey_file
+      delegate_to: localhost
+
+    - set_fact:
+        apikey_id: "{{ item }}"
+      with_items: "{{ existing_api_keys.json|json_query(apikey_id_query) }}"
+      vars:
+        apikey_id_query: "[?name=='grafana_apikey'].id"
+      when:
+        - ((existing_api_keys['json'] | selectattr("name", "equalto", "grafana_apikey")) | list) | length == 1
+        - grafana_apikey_file.stat.exists == False
+
+    - debug:
+        var: apikey_id
+      when:
+        - ((existing_api_keys['json'] | selectattr("name", "equalto", "grafana_apikey")) | list) | length == 1
+        - grafana_apikey_file.stat.exists == False
+
+    - name: Delete grafana API Key when grafana API Key file is missing
+      uri:
+        url: "http://{{ ansible_host }}:{{ grafana_port }}/api/auth/keys/{{ apikey_id }}"
+        user: "{{ grafana_admin_user }}"
+        password: "{{ grafana_admin_password }}"
+        force_basic_auth: yes
+        method: DELETE
+      when:
+        - ((existing_api_keys['json'] | selectattr("name", "equalto", "grafana_apikey")) | list) | length == 1
+        - grafana_apikey_file.stat.exists == False
+
+    - name: Create grafana API Key
+      uri:
+        url: "http://{{ ansible_host }}:{{ grafana_port }}/api/auth/keys"
+        user: "{{ grafana_admin_user }}"
+        password: "{{ grafana_admin_password }}"
+        force_basic_auth: yes
+        method: POST
+        body_format: json
+        body: "{{ item | to_json }}"
+      with_items: "{{ grafana_api_keys }}"
+      when: (((existing_api_keys['json'] | selectattr("name", "equalto", item['name'])) | list) | length == 0) or (((existing_api_keys['json'] | selectattr("name", "equalto", "grafana_apikey")) | list) | length == 1 and grafana_apikey_file.stat.exists == False)
+      register: new_api_keys
+
+    - name: Create grafana API key file
+      become: no
+      copy:
+        dest: "{{ playbook_dir }}/conf/keys/{{ item['item']['name'] }}.key"
+        content: "{{ item['json']['key'] }}"
+        backup: no
+      when: item['json'] is defined
+      with_items: "{{ new_api_keys['results'] }}"
+      delegate_to: localhost
+
+    - name: import grafana data source
+      shell: >
+        chdir={{ grafana_dir }}/data
+        warn=no
+        curl -q -X POST -d @data_source.json --header 'Content-Type: application/json'
+        "http://{{ grafana_admin_user }}:{{ grafana_admin_password }}@127.0.0.1:{{ grafana_port }}/api/datasources"
+
+    - name: import grafana dashboards - prepare config
+      delegate_to: localhost
+      template: src=grafana.dest.json.j2 dest={{ playbook_dir }}/scripts/dests.json
+      vars:
+        - ansible_become: false
+        - ansible_connection: local
+        - grafana_dest_config:
+            name: "{{ cluster_name | title }}"
+            url: "http://{{ansible_default_ipv4.address}}:{{ grafana_port }}/"
+            user: "{{ grafana_admin_user }}"
+            password: "{{ grafana_admin_password }}"
+            apikey: "{{ lookup('file', '{{ playbook_dir }}/conf/keys/grafana_apikey.key') }}"
+            datasource: "{{ cluster_name }}"
+            titles:
+              node: "{{ cluster_name | title }}-Node"
+              mysql: "{{cluster_name | title}}-Mysql"
+              radon: "{{cluster_name | title}}-Radon"
+
+    - name: import grafana dashboards - run import script
+      delegate_to: localhost
+      shell: >-
+        chdir={{ playbook_dir }}/scripts
+        python grafana-config-copy.py
+      vars:
+        - ansible_become: false
+        - ansible_connection: local

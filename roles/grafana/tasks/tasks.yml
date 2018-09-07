@@ -1,0 +1,39 @@
+- name: create common deploy directories
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+  - "{{ grafana_dir }}"
+  - "{{ grafana_dir }}/dashboards"
+  - "{{ grafana_dir }}/data"
+  - "{{ grafana_dir }}/plugins"
+  - "{{ grafana_dir }}/log"
+
+- name: push data source file
+  template: src=data_source.json.j2 dest={{ grafana_dir }}/data/data_source.json mode=0644
+
+- name: deploy grafana binary
+  unarchive: src={{playbook_dir}}/resources/grafana-{{grafana_version}}.tar.gz dest={{grafana_dir}} owner=root group=root
+
+- name: create grafana configuration file
+  template: src=grafana.ini.j2 dest={{ grafana_dir }}/conf/grafana.ini mode=0644
+
+- name: configure grafana default dashboards dir
+  template: src=dashboards.yaml.j2 dest={{ grafana_dir }}/conf/provisioning/dashboards/sample.yaml
+
+- name: create run script
+  template:
+    src: "{{ item }}_grafana.sh.j2"
+    dest: "{{ grafana_dir }}/scripts/{{ item }}_grafana.sh"
+    mode: "0755"
+    backup: yes
+  with_items:
+    - run
+
+- name: deploy systemd
+  include_role:
+    name: systemd
+  vars:
+    this_role_name: grafana
+    service_name: grafana-{{ grafana_port }}
+    script_dir: "{{grafana_dir}}/scripts"
+    server_user: root
+    server_group: root

@@ -1,0 +1,7 @@
+---
+env:
+ RUNLEVEL: 1
+
+mysql_pkgs:
+  - libaio1
+  - libaio-dev

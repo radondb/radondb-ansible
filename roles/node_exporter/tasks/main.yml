@@ -1,0 +1,20 @@
+---
+- name: deploy node_exporter binary
+  copy: src="{{playbook_dir}}/resources/node_exporter" dest="{{ exporter_dir }}/bin" mode=0755
+
+- name: copy run_node_exporter.sh
+  template:
+    src: "run_node_exporter.sh.j2"
+    dest: "{{exporter_dir}}/scripts/run_node_exporter.sh"
+    mode: "0755"
+    backup: yes
+
+- name: deploy systemd
+  include_role:
+    name: systemd
+  vars:
+    this_role_name: node_exporter
+    service_name: node_exporter-{{ node_exporter_port }}
+    script_dir: "{{exporter_dir}}/scripts"
+    server_user: root
+    server_group: root

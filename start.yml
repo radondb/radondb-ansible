@@ -1,0 +1,82 @@
+- name: check config locally
+  hosts: localhost
+  any_errors_fatal: true
+  tags:
+    - always
+  roles:
+    - check_config
+
+- name: check system environment
+  hosts: all
+  any_errors_fatal: true
+  tags:
+    - always
+  roles:
+    - check_system
+
+- hosts: all
+  tags:
+    - node_exporter
+  tasks:
+    - name: start node_exporter by systemd
+      become: true
+      systemd: name=node_exporter-{{ node_exporter_port }}.service state=started enabled=no
+
+    - name: wait for node_exporter up
+      wait_for: |
+        host={{ansible_default_ipv4.address}} port={{ node_exporter_port }} state=present timeout=30
+
+- hosts: mysql
+  tags:
+    - mysql
+    - mysqld_exporter
+  sudo: yes
+  tasks:
+    - name: start mysql by mysql.server
+      become: true
+      shell: /bin/bash {{ deploy_dir }}/bin/mysql.server start
+
+    - name: wait for mysql up
+      wait_for: |
+        host={{ansible_default_ipv4.address}} port={{mysql_port}} state=present timeout=30
+
+    - name: start mysqld_exporter
+      become: true
+      systemd: name=mysqld_exporter-{{ mysqld_exporter_port }}.service state=started enabled=no
+
+    - name: wait for mysqld_exporter up
+      wait_for: |
+        host={{ansible_default_ipv4.address}} port={{ mysqld_exporter_port }} state=present timeout=30
+
+- hosts: radon
+  tags:
+    - radon
+  tasks:
+    - name: start radon by systemd
+      become: true
+      systemd: name=radon-{{ endpoint }}.service state=started enabled=no
+
+    - name: wait for radon up
+      wait_for: |
+        host={{ansible_default_ipv4.address}} port={{ endpoint }} state=present timeout=30
+
+- hosts: monitor
+  tags:
+    - prometheus
+    - grafana
+  tasks:
+    - name: start prometheus by systemd
+      become: true
+      systemd: name=prometheus-{{ prometheus_port }}.service state=started enabled=no
+
+    - name: wait for prometheus up
+      wait_for: |
+        host={{ansible_default_ipv4.address}} port={{ prometheus_port }} state=present timeout=30
+
+    - name: start grafana by systemd
+      become: true
+      systemd: name=grafana-{{ grafana_port }}.service state=started enabled=no
+
+    - name: wait for grafana up
+      wait_for: |
+        host={{ansible_default_ipv4.address}} port={{ grafana_port }} state=present timeout=30

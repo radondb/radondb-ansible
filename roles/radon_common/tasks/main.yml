@@ -1,0 +1,48 @@
+---
+- name: add user set group
+  user: name={{deploy_usr}} group={{group_name}} home={{deploy_dir}} state=present
+
+- name: create deploy directories
+  file: path={{ item }} state=directory mode=0755 owner={{deploy_usr}} group={{group_name}}
+  with_items:
+  - "{{deploy_dir}}/bin"
+  - "{{deploy_dir}}/conf"
+  - "{{deploy_dir}}/data"
+  - "{{deploy_dir}}/log"
+  - "{{deploy_dir}}/scripts"
+
+- name: copy radon.json
+  template: src=radon.json.j2 dest={{deploy_dir}}/conf/radon.json owner={{deploy_usr}} group={{group_name}} mode=0644
+
+- name: copy radon
+  copy: src={{playbook_dir}}/resources/radon dest={{deploy_dir}}/bin/radon owner={{deploy_usr}} group={{group_name}} mode=0755
+
+- name: copy radoncli
+  copy: src={{playbook_dir}}/resources/radoncli dest={{deploy_dir}}/bin/radoncli owner={{deploy_usr}} group={{group_name}} mode=0755
+
+- name: Edit /root/.bashrc
+  blockinfile: path=/root/.bashrc block='export PATH=$PATH:{{ deploy_dir }}/bin' insertafter=EOF
+
+- name: Edit {{deploy_dir}}/.bashrc
+  blockinfile: path={{deploy_dir}}/.bashrc block='export PATH=$PATH:{{ deploy_dir }}/bin' insertafter=EOF
+
+- name: create run script
+  template:
+    src: "{{ item }}_radon.sh.j2"
+    dest: "{{ deploy_dir }}/scripts/{{ item }}_radon.sh"
+    mode: "0755"
+    backup: yes
+    owner: "{{deploy_usr}}"
+    group: "{{group_name}}"
+  with_items:
+    - run
+
+- name: deploy systemd
+  include_role:
+    name: systemd
+  vars:
+    this_role_name: radon
+    service_name: "radon-{{ endpoint }}"
+    script_dir: "{{deploy_dir}}/scripts"
+    server_user: "{{deploy_usr}}"
+    server_group: "{{group_name}}"

@@ -1,0 +1,9 @@
+{% set metric_host = hostvars[groups.monitor[0]].ansible_host | default(hostvars[groups.monitor[0]].inventory_hostname) if groups.monitor else "" -%}
+{% set metric_port = hostvars[groups.monitor[0]].prometheus_port if groups.monitor else ''-%}
+{
+    "name":"{{ cluster_name }}",
+    "type":"prometheus",
+    "access":"proxy",
+    "url":"http://{{ metric_host }}:{{ metric_port }}/",
+    "basicAuth":false
+}

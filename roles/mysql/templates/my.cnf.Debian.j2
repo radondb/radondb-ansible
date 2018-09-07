@@ -1,0 +1,83 @@
+[mysqld]
+federated
+
+basedir = {{ deploy_dir }}
+datadir = {{ mysql_data_dir }}
+
+socket = /tmp/mysql.sock
+log-error = {{ deploy_dir }}/log/mysql-error.log
+slow_query_log_file = {{ deploy_dir }}/log/mysql-slow.log
+
+read_only = ON
+binlog_format = row
+log-bin-index=mysql-bin.index
+log-bin={{ mysql_data_dir }}/mysql-bin
+open_files_limit=65536
+core-file
+
+##semi-sync
+plugin-load="semisync_master.so;semisync_slave.so"
+rpl_semi_sync_master_enabled=OFF
+rpl_semi_sync_slave_enabled=ON
+rpl_semi_sync_master_wait_no_slave=ON
+rpl_semi_sync_master_timeout=1000000000000000000
+
+##repl
+skip-slave-start
+gtid-mode = ON
+enforce-gtid-consistency = ON
+slave_parallel_type = LOGICAL_CLOCK
+slave_parallel_workers=64
+log-slave-updates
+
+#relay log
+relay_log={{ mysql_data_dir }}/mysql-relay-bin
+relay_log_index=mysql-relay-bin.index
+
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+
+#tokudb
+ignore_db_dir=tokudb.redos
+ignore_db_dir=tokudb.datas
+loose_tokudb_log_dir = tokudb.redos
+loose_tokudb_directio = ON
+
+#fixed config
+slow_query_log=1
+tmp_table_size=32M
+tmpdir={{ mysql_data_dir }}
+
+
+server_id = {{ server_id }}
+
+innodb_ft_max_token_size=84
+sync_relay_log=1000
+innodb_ft_min_token_size=3
+interactive_timeout=300
+character_set_server=utf8
+tokudb_fsync_log_period=0
+port={{ mysql_port }}
+max_connections={{max_connections}}
+innodb_buffer_pool_size=2662M
+sync_master_info=1000
+lower_case_table_names={{lower_case_table_names}}
+max_allowed_packet=4194304
+max_connect_errors=655360
+table_open_cache=2000
+loose_tokudb_cache_size=2662M
+query_cache_type=OFF
+back_log=2048
+max_execution_time=0
+sync_relay_log_info=1000
+ft_min_word_len=4
+sql_mode={{sql_mode}}
+wait_timeout={{wait_timeout}}
+log_bin_trust_function_creators=1
+thread_cache_size=128
+slave_parallel_workers=64
+query_cache_size=0
+innodb_buffer_pool_instances=2
+expire_logs_days=1
+long_query_time={{long_query_time}}
+key_buffer_size=33554432

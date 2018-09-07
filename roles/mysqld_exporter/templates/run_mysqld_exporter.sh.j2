@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+# WARNING: This file was auto-generated. Do not edit!
+#          All your edit might be overwritten!
+EXPORTER_DIR={{ exporter_dir }}
+cd "${EXPORTER_DIR}" || exit 1
+
+exec > >(tee -i -a "{{ exporter_dir }}/log/{{ mysqld_exporter_log_filename }}")
+exec 2>&1
+
+exec bin/mysqld_exporter --web.listen-address=":{{ mysqld_exporter_port }}" \
+    --log.level="{{ mysqld_exporter_log_level }}" \
+    --config.my-cnf=bin/.my.cnf

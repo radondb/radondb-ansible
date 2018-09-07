@@ -1,0 +1,35 @@
+---
+- name: create deploy directories
+  file: path={{ item }} state=directory mode=0755
+  with_items:
+  - "{{prometheus_dir}}"
+  - "{{prometheus_dir}}/bin"
+  - "{{prometheus_dir}}/conf"
+  - "{{prometheus_dir}}/data"
+  - "{{prometheus_dir}}/log"
+  - "{{prometheus_dir}}/scripts"
+
+- name: create configuration file
+  template: src=prometheus.yml.j2 dest={{prometheus_dir}}/conf/prometheus.yml mode=0644 backup=yes
+
+- name: deploy prometheus binary
+  copy: src="{{ playbook_dir }}/resources/prometheus" dest="{{ prometheus_dir }}/bin/" mode=0755
+
+- name: create run script
+  template:
+    src: "{{ item }}_prometheus.sh.j2"
+    dest: "{{ prometheus_dir }}/scripts/{{ item }}_prometheus.sh"
+    mode: "0755"
+    backup: yes
+  with_items:
+    - run
+
+- name: deploy systemd
+  include_role:
+    name: systemd
+  vars:
+    this_role_name: prometheus
+    service_name: prometheus-{{ prometheus_port }}
+    script_dir: "{{prometheus_dir}}/scripts"
+    server_user: root
+    server_group: root

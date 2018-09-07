@@ -1,0 +1,23 @@
+---
+- name: Make sure we have a 'radon' group
+  group: name={{group_name}} state=present
+
+- name: Edit /etc/rc.local
+  blockinfile: path=/etc/rc.local block='echo never > /sys/kernel/mm/transparent_hugepage/enabled' insertbefore='exit 0'
+
+- name: Edit /etc/sysctl.conf
+  copy: src={{playbook_dir}}/resources/sysctl.conf dest=/etc/sysctl.conf owner=root group=root backup=yes
+
+- name: Edit /etc/security/limits.conf
+  copy: src={{playbook_dir}}/resources/limits.conf dest=/etc/security/limits.conf owner=root group=root backup=yes
+
+- name: Set aio parm
+  sysctl: name=fs.aio-max-nr value=262144 state=present
+
+- name: create exporter directories
+  file: path={{ item }} state=directory mode=0755
+  with_items:
+  - "{{ exporter_dir }}"
+  - "{{ exporter_dir }}/log"
+  - "{{ exporter_dir }}/bin"
+  - "{{ exporter_dir }}/scripts"

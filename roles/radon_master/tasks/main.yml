@@ -1,0 +1,41 @@
+- name: add backend
+  uri:
+    url: http://{{ansible_default_ipv4.address}}:{{peer_port}}/v1/radon/backend
+    method: POST
+    body: {
+      "name": "{{'backend'+hostvars[item]['server_id']|string}}",
+      "address": "{{hostvars[item]['ansible_eth0']['ipv4']['address']}}:{{mysql_port}}",
+      "user": "{{mysql_user}}",
+      "password": "{{mysql_passwd|string}}",
+      "max-connections": "{{backend_max_conn}}"
+      }
+    body_format: json
+  with_items:
+    - "{{ groups['backend']}}"
+  when: groups['backend'] | length >= 1
+
+- name: add backup
+  uri:
+    url: http://{{ansible_default_ipv4.address}}:{{peer_port}}/v1/radon/backup
+    method: POST
+    body: {
+      "name": "{{'backup'+hostvars[item]['server_id']|string}}",
+      "address": "{{hostvars[item]['ansible_eth0']['ipv4']['address']}}:{{mysql_port}}",
+      "user": "{{mysql_user}}",
+      "password": "{{mysql_passwd|string}}",
+      "max-connections": "{{backup_max_conn}}"
+      }
+    body_format: json
+  with_items:
+    - "{{ groups['backup']}}"
+  when: groups['backup'] | length >= 1
+
+- name: add user
+  uri:
+    url: http://{{ansible_default_ipv4.address}}:{{peer_port}}/v1/user/add
+    method: POST
+    body: {
+      "user": "{{radon_usr}}",
+      "password": "{{radon_passwd|string}}"
+      }
+    body_format: json

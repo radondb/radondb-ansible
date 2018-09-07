@@ -1,0 +1,12 @@
+---
+
+# default configuration for prometheus
+
+prometheus_storage_retention: "15d"
+prometheus_log_level: info
+prometheus_log_filename: "prometheus.log"
+
+prometheus_extra_labels:
+  - { label: "monitor", value: "prometheus" }
+
+prometheus_tag: v2.3.2

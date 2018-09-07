@@ -1,0 +1,37 @@
+---
+- name: add user set group
+  user: name={{deploy_usr}} group={{group_name}} home={{deploy_dir}} state=present
+
+- name: Install the mysql packages in Debian derivatives
+  apt: name={{ item }} state=installed update_cache=yes
+  with_items:
+    - "{{ mysql_pkgs }}"
+  environment: "{{ env }}"
+  when: ansible_os_family == 'Debian'
+
+- name: Uncompression Mysql Software To Ubuntu Client
+  unarchive: src={{playbook_dir}}/resources/mysql.tar.gz dest={{deploy_dir}} owner={{deploy_usr}} group={{group_name}}
+
+- name: Edit /root/.bashrc
+  blockinfile: path=/root/.bashrc block='export PATH=$PATH:{{deploy_dir}}/bin' insertafter=EOF
+
+- name: Edit {{deploy_dir}}/.bashrc
+  blockinfile: path={{deploy_dir}}/.bashrc block='export PATH=$PATH:{{deploy_dir}}/bin' insertafter=EOF
+
+- name: Copy the my.cnf file
+  template: src=my.cnf.{{ ansible_os_family }}.j2 dest=/tmp/my.cnf owner=root group=root mode=0644
+
+- name: Copy Mysql Start Script To Client
+  template: src=mysql.server.j2 dest=/tmp/mysql.server owner=root group=root mode=0755
+
+- name: Copy Install Mysql Script  To Ubuntu
+  template: src=install_mysql.sh.j2 dest=/tmp/install_mysql.sh owner=root group=root mode=0755
+
+- name: Install Mysql Script In Ubuntu Client
+  shell: /bin/bash /tmp/install_mysql.sh
+
+- name: Copy Mysql Security Script To Ubuntu
+  template: src=mysql_security.sh.j2 dest=/tmp/mysql_security.sh owner=root group=root mode=0755
+
+- name: Start Myql Security Script In Ubuntu Client
+  shell: /bin/bash /tmp/mysql_security.sh

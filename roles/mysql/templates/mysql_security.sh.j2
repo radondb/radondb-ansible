@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+{{ deploy_dir }}/bin/mysql -h localhost -u root -S /tmp/mysql.sock -e "grant all privileges on *.* to '{{mysql_user}}'@'{{ ansible_default_ipv4.address }}' identified by '{{ mysql_passwd }}' with grant option;"
+{{ deploy_dir }}/bin/mysql -h localhost -u root -S /tmp/mysql.sock -e "grant all privileges on *.* to '{{mysql_user}}'@'%' identified by '{{ mysql_passwd }}' with grant option;"
+{{ deploy_dir }}/bin/mysql -h localhost -u root -S /tmp/mysql.sock -e "grant replication client, process on *.* to {{ mysqld_exporter_usr }}@'localhost' identified by '{{ mysqld_exporter_passwd }}';"
+{{ deploy_dir }}/bin/mysql -h localhost -u root -S /tmp/mysql.sock -e "grant select on performance_schema.* TO {{ mysqld_exporter_usr }}@'localhost';"
+{{ deploy_dir }}/bin/mysql -h localhost -u root -S /tmp/mysql.sock -e "grant all privileges on *.* to '{{mysql_user}}'@'localhost' identified by '{{ mysql_passwd }}' with grant option;"
+{% if mysql_user == 'root' %}
+{{ deploy_dir }}/bin/mysql -h localhost -u root -p{{ mysql_passwd }} -e "delete from mysql.user where authentication_string='';"
+{{ deploy_dir }}/bin/mysql -h localhost -u root -p{{ mysql_passwd }} -e "drop database if exists test;"
+{{ deploy_dir }}/bin/mysql -h localhost -u root -p{{ mysql_passwd }} -e "flush privileges;"
+{% else %}
+{{ deploy_dir }}/bin/mysql -h localhost -u root -S /tmp/mysql.sock -e "delete from mysql.user where authentication_string='';"
+{{ deploy_dir }}/bin/mysql -h localhost -u root -S /tmp/mysql.sock -e "drop database if exists test;"
+{{ deploy_dir }}/bin/mysql -h localhost -u root -S /tmp/mysql.sock -e "flush privileges;"
+{% endif %}
+{{ deploy_dir }}/bin/mysql.server stop >/dev/null 2>&1 &
+sleep 5
+rm -rf /tmp/$(basename $0)
