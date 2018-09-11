@@ -1,4 +1,12 @@
 ---
+- hosts: all
+  tasks:
+    - name: set authorized key
+      authorized_key:
+        user: "{{ ansible_user }}"
+        key: "{{ lookup('file', '/home/{{ ansible_user }}/.ssh/id_rsa.pub') }}"
+        state: present
+
 - name: check config locally
   hosts: localhost
   any_errors_fatal: true
