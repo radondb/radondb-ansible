@@ -68,10 +68,17 @@ The key's randomart image is:
 
 ### 下载部署文件
 
-在`ubuntu`用户下，从`github`下载`radondb-ansible`。
+- 在`ubuntu`用户下，从`github`下载`radondb-ansible`。
 
 ```
 # git clone https://github.com/radondb/radondb-ansible.git
+```
+
+- 在`ubuntu`用户下，从`github`下载`radondb-ansible`的release版。
+
+```
+# wget https://github.com/radondb/radondb-ansible/releases/download/0.1.0/radondb-ansible-0.1.0.tar.gz
+# tar -xvf radondb-ansible-0.1.0.tar.gz
 ```
 
 ### 安装Ansible
