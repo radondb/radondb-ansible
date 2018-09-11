@@ -1,0 +1,112 @@
+---
+
+- name: Stop if ansible version is too low, make sure that the Ansible version is Ansible 2.4.2 or later, otherwise a compatibility issue occurs.
+  assert:
+    that:
+      - ansible_version.full|version_compare('2.4.2', '>=')
+
+- name: create downloads and conf directories
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+  - "{{playbook_dir}}/downloads"
+  - "{{ playbook_dir }}/conf"
+
+- name: create packages.yml
+  template: src=packages.yml.j2 dest={{ playbook_dir }}/conf/packages.yml
+
+- include_vars: file={{ playbook_dir }}/conf/packages.yml
+
+# preflight checks
+- name: detect outbound network
+  shell: >
+    warn=no
+    curl -s --connect-timeout 10 www.baidu.com 2>/dev/null >/dev/null; echo $?
+  changed_when: false
+  register: outbound_network_st
+
+- name: set outbound network fact
+  set_fact: has_outbound_network={{ outbound_network_st.stdout.strip() == '0' }}
+
+- fail:
+    msg: "The Control Machine must have access to the Internet in order to download TiDB and related packages."
+  when: not has_outbound_network
+
+- name: download monitor packages
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{playbook_dir}}/downloads/{{ item.name }}-{{ item.version }}.tar.gz"
+    checksum: "{{ item.checksum | default(omit) }}"
+    force: yes
+    validate_certs: no
+  register: get_url_result
+  until: "'OK' in get_url_result.msg or 'file already exists' in get_url_result.msg"
+  retries: 4
+  delay: "{{ retry_stagger | random + 3 }}"
+  with_items: "{{ monitor_packages }}"
+  when:
+    - has_outbound_network
+
+- name: download other packages
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{playbook_dir}}/resources/{{ item.name }}-{{ item.version }}.tar.gz"
+    checksum: "{{ item.checksum | default(omit) }}"
+    force: yes
+    validate_certs: no
+  register: get_url_result
+  until: "'OK' in get_url_result.msg or 'file already exists' in get_url_result.msg"
+  retries: 4
+  delay: "{{ retry_stagger | random + 3 }}"
+  with_items: "{{ other_packages }}"
+  when:
+    - has_outbound_network
+
+- name: download deb packages
+  get_url:
+    url: "{{ item.url }}"
+    dest: "{{ playbook_dir }}/resources/{{ item.name }}-{{ item.version }}.deb"
+    checksum: "{{ item.checksum | default(omit) }}"
+    force: yes
+    validate_certs: no
+  register: get_url_result
+  until: "'OK' in get_url_result.msg or 'file already exists' in get_url_result.msg"
+  retries: 4
+  delay: "{{ retry_stagger | random + 3 }}"
+  with_items: "{{ deb_packages }}"
+  when:
+    - has_outbound_network
+
+- name: unarchive monitor packages
+  shell: ls -1 {{ item.name }}-{{ item.version }}.tar.gz | xargs -n1 tar xzf
+  args:
+    chdir: "{{playbook_dir}}/downloads"
+    warn: no
+  with_items: "{{ monitor_packages }}"
+
+- name: cp monitoring binary
+  shell: >
+    cp -v {{playbook_dir}}/downloads/{{ item }}-*/{{ item }} "{{ playbook_dir }}/resources/{{ item }}"
+  with_items:
+    - prometheus
+    - node_exporter
+    - mysqld_exporter
+
+# currently, radon has no release version, we must build by ourselves
+- name: git clone radon
+  git:
+    repo: https://github.com/radondb/radon.git
+    dest: "{{playbook_dir}}/downloads/radon"
+
+- name: make build radon
+  shell: make build
+  args:
+    chdir: "{{playbook_dir}}/downloads/radon"
+    warn: no
+
+- name: copy radon binary to resources dir
+  copy:
+    src: "{{playbook_dir}}/downloads/radon/bin/{{item}}"
+    dest: "{{playbook_dir}}/resources"
+  with_items:
+    - radon
+    - radoncli

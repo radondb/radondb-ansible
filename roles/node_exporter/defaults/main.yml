@@ -4,5 +4,3 @@
 
 node_exporter_log_level: info
 node_exporter_log_filename: "node_exporter.log"
-
-node_exporter_tag: v0.16.0

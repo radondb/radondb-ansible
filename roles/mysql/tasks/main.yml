@@ -2,15 +2,11 @@
 - name: add user set group
   user: name={{deploy_usr}} group={{group_name}} home={{deploy_dir}} state=present
 
-- name: Install the mysql packages in Debian derivatives
-  apt: name={{ item }} state=installed update_cache=yes
-  with_items:
-    - "{{ mysql_pkgs }}"
-  environment: "{{ env }}"
-  when: ansible_os_family == 'Debian'
-
 - name: Uncompression Mysql Software To Ubuntu Client
-  unarchive: src={{playbook_dir}}/resources/mysql.tar.gz dest={{deploy_dir}} owner={{deploy_usr}} group={{group_name}}
+  unarchive: src={{playbook_dir}}/resources/Percona-Server-{{mysql_version}}.tar.gz dest=/tmp owner={{deploy_usr}} group={{group_name}}
+
+- name: move to the deploy_dir
+  shell: mv /tmp/Percona-Server-{{mysql_version}}-Linux.x86_64.ssl100/* {{deploy_dir}}
 
 - name: Edit /root/.bashrc
   blockinfile: path=/root/.bashrc block='export PATH=$PATH:{{deploy_dir}}/bin' insertafter=EOF
@@ -27,6 +23,18 @@
 - name: Copy Install Mysql Script  To Ubuntu
   template: src=install_mysql.sh.j2 dest=/tmp/install_mysql.sh owner=root group=root mode=0755
 
+- name: Copy deb packages to client
+  copy: src={{playbook_dir}}/resources/{{item}}.deb dest=/tmp owner=root group=root
+  with_items:
+    - "{{ mysql_pkgs }}"
+
+- name: Install the mysql packages in Debian derivatives
+  apt: deb=/tmp/{{item}}.deb
+  with_items:
+    - "{{ mysql_pkgs }}"
+  environment: "{{ env }}"
+  when: ansible_os_family == 'Debian'
+
 - name: Install Mysql Script In Ubuntu Client
   shell: /bin/bash /tmp/install_mysql.sh
 
@@ -35,3 +43,11 @@
 
 - name: Start Myql Security Script In Ubuntu Client
   shell: /bin/bash /tmp/mysql_security.sh
+
+- name: config the my.cnf
+  blockinfile:
+    path: "{{ deploy_dir }}/etc/my.cnf"
+    owner: "{{deploy_usr}}"
+    insertafter: EOF
+    block: |
+      tokudb_fsync_log_period=0

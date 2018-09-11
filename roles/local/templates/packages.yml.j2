@@ -1,0 +1,31 @@
+monitor_packages:
+  - name: prometheus
+    version: 2.3.2
+    url: "https://github.com/prometheus/prometheus/releases/download/v2.3.2/prometheus-2.3.2.linux-amd64.tar.gz"
+    checksum: "sha256:351931fe9bb252849b7d37183099047fbe6d7b79dcba013fb6ae19cc1bbd8552"
+  - name: node_exporter
+    version: 0.16.0
+    url: "https://github.com/prometheus/node_exporter/releases/download/v0.16.0/node_exporter-0.16.0.linux-amd64.tar.gz"
+    checksum: "sha256:e92a601a5ef4f77cce967266b488a978711dabc527a720bea26505cba426c029"
+  - name: mysqld_exporter
+    version: 0.11.0
+    url: "https://github.com/prometheus/mysqld_exporter/releases/download/v0.11.0/mysqld_exporter-0.11.0.linux-amd64.tar.gz"
+    checksum: "sha256:b53ad48ff14aa891eb6a959730ffc626db98160d140d9a66377394714c563acf"
+
+other_packages:
+  - name: grafana
+    version: 5.2.3
+    url: "https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-5.2.3.linux-amd64.tar.gz"
+    checksum: "sha256:946b9b1c76c166eea60bee3b1c8a376300302c4373895212e73f4e7ef0cf1d25"
+  - name: Percona-Server
+    version: 5.7.22-22
+    url: "https://www.percona.com/downloads/Percona-Server-LATEST/Percona-Server-5.7.22-22/binary/tarball/Percona-Server-5.7.22-22-Linux.x86_64.ssl100.tar.gz"
+    checksum: "md5:7fb7cbc082c4d1732c125cfa84ee8a91"
+
+deb_packages:
+  - name: libaio1
+    version: 0.3.110
+    url: "http://archive.ubuntu.com/ubuntu/pool/main/liba/libaio/libaio1_0.3.110-2_amd64.deb"
+  - name: libaio-dev
+    version: 0.3.110
+    url: "http://archive.ubuntu.com/ubuntu/pool/main/liba/libaio/libaio-dev_0.3.110-2_amd64.deb"

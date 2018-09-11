@@ -8,5 +8,3 @@ prometheus_log_filename: "prometheus.log"
 
 prometheus_extra_labels:
   - { label: "monitor", value: "prometheus" }
-
-prometheus_tag: v2.3.2

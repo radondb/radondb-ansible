@@ -3,5 +3,5 @@ env:
  RUNLEVEL: 1
 
 mysql_pkgs:
-  - libaio1
-  - libaio-dev
+  - libaio1-0.3.110
+  - libaio-dev-0.3.110
