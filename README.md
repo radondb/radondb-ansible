@@ -10,4 +10,5 @@
 - [ ] configure radon master/slave
 
 ## License
-Radon-Ansible is under the Apache 2.0 license.
+
+RadonDB-Ansible is released under the GPLv3. See LICENSE.
