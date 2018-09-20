@@ -1,3 +1,23 @@
+目录
+=================
+
+* [RadonDB Ansible 部署](#radonDB-ansible-部署)
+   * [概述](#概述)
+   * [环境要求](#环境要求)
+   * [准备工作](#准备工作)   
+      * [安装依赖包](#安装依赖包)
+      * [创建用户](#创建用户)
+      * [生成 ssh key](#生成-ssh-key)
+      * [下载部署文件](#下载部署文件)
+      * [安装Ansible](#安装ansible)
+      * [修改配置文件](#修改配置文件)
+   * [下载安装包](#下载安装包)
+   * [部署集群](#部署集群)
+   * [启动集群](#启动集群)
+   * [初始化集群](#初始化集群)
+   * [测试集群](#测试集群)
+   * [关闭集群](#关闭集群)
+
 # RadonDB Ansible 部署
 
 ## 概述
@@ -74,7 +94,7 @@ The key's randomart image is:
 # git clone https://github.com/radondb/radondb-ansible.git
 ```
 
-- 在`ubuntu`用户下，从`github`下载`radondb-ansible`的release版。
+- 或者，从`github`下载`radondb-ansible`的release版。
 
 ```
 # wget https://github.com/radondb/radondb-ansible/releases/download/0.1.0/radondb-ansible-0.1.0.tar.gz
@@ -83,7 +103,7 @@ The key's randomart image is:
 
 ### 安装Ansible
 
-在`radondb-ansible`目录下执行以下指定安装Ansible及其依赖程序。
+在`radondb-ansible`目录下执行以下指令安装Ansible及其依赖程序。
 
 ```
 $ cd /home/ubuntu/radondb-ansible
@@ -235,14 +255,14 @@ resources/
 # ansible-playbook -i inventory.ini init.yml -K
 ```
 
-配置radon集群，配置grafana的数据源，上传dashboards。此步骤只在初次部署时执行。
+初始化包括配置radon集群，配置grafana的数据源，上传dashboards等。此步骤只在初次部署时执行。
 
 ## 测试集群
 
 -   使用 MySQL 客户端连接测试，3306为radon默认端口，默认用户为usr。
 
     ```
-    mysql -u usr -h 192.168.0.28 -P 3306
+    mysql -u usr -h 192.168.0.28 -P 3306 -p
     ```
 
 -   通过浏览器访问监控平台。
