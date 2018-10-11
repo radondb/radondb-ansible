@@ -96,6 +96,7 @@
   git:
     repo: https://github.com/radondb/radon.git
     dest: "{{playbook_dir}}/downloads/radon"
+    version: "{{radon_release}}"
 
 - name: make build radon
   shell: make build

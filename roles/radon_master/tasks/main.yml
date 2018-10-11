@@ -4,7 +4,7 @@
     method: POST
     body: {
       "name": "{{'backend'+hostvars[item]['server_id']|string}}",
-      "address": "{{hostvars[item]['ansible_eth0']['ipv4']['address']}}:{{mysql_port}}",
+      "address": "{{hostvars[item].ansible_host | default(hostvars[item].inventory_hostname)}}:{{mysql_port}}",
       "user": "{{mysql_user}}",
       "password": "{{mysql_passwd|string}}",
       "max-connections": "{{backend_max_conn}}"
@@ -20,7 +20,7 @@
     method: POST
     body: {
       "name": "{{'backup'+hostvars[item]['server_id']|string}}",
-      "address": "{{hostvars[item]['ansible_eth0']['ipv4']['address']}}:{{mysql_port}}",
+      "address": "{{hostvars[item].ansible_host | default(hostvars[item].inventory_hostname)}}:{{mysql_port}}",
       "user": "{{mysql_user}}",
       "password": "{{mysql_passwd|string}}",
       "max-connections": "{{backup_max_conn}}"

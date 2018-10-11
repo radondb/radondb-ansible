@@ -1,0 +1,2 @@
+backend_max_conn: 1024
+backup_max_conn: 1024

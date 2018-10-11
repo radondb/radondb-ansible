@@ -5,3 +5,5 @@ env:
 mysql_pkgs:
   - libaio1-0.3.110
   - libaio-dev-0.3.110
+
+sql_mode: STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION

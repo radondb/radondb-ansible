@@ -1,0 +1,26 @@
+### proxy config
+twopc_enable: "false"
+max_connections: 1024
+max_result_size: 1073741824
+ddl_timeout: 36000000
+query_timeout: 300000
+backup_default_engine: TokuDB
+
+### audit config
+mode: A
+max_size: 134217728
+expire_hours: 1
+
+### router config
+slots_readonly: 4096
+blocks_readonly: 128
+
+### binlog config
+relay_workers: 32
+relay_wait_ms: 5000
+enable_binlog: "true"
+enable_relay: "true"
+parallel_type: 1
+
+### log
+level: INFO
