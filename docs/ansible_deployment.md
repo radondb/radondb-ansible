@@ -154,15 +154,23 @@ radon主机组配置参数：
 | deploy_dir | radon部署目录 |
 | deploy_usr | radon部署用户 |
 | endpoint | radon监听端口 |
+| peer_port | radon REST API接口 |
+| monitor_port | 监控metrics监听端口 |
+| radon_usr | RadonDB用户名 |
+| radon_passwd | RadonDB密码 |
+
+roles/radon_common/vars/main.yml中部分参数：
+
+| 变量 | 含义 |
+| ---- | ------ |
 | twopc_enable | 是否启用分布式事务 |
 | max_connections | 最大连接数 |
 | max_result_size | 单个存储节点上最大结果集的大小（单位：字节），0表示无限制。 |
 | ddl_timeout | DDL超时时间，0表示无限制(ms) |
 | query_timeout | 查询超时时间，0表示无限制(ms) |
+| backup_default_engine | backup节点默认存储引擎 |
 | mode | 审计模式;None: 不开启审计；Audit-Read：审计读；Audit-Write：审计写；Audit-Read-Write：审计读和写 |
-| monitor_port | 监控metrics监听端口 |
-| radon_usr | RadonDB用户名 |
-| radon_passwd | RadonDB密码 |
+| expire_hours | 审计文件保存时间 |
 
 mysql主机组配置参数：
 
@@ -171,10 +179,14 @@ mysql主机组配置参数：
 | deploy_dir | mysql部署目录 |
 | deploy_usr | mysql部署用户 |
 | mysql_data_dir | mysql data目录 |
-| max_connections | 最大连接数 |
 | mysqld_exporter_usr | mysqld_exporter监控使用用户名 |
 | mysqld_exporter_passwd | mysqld_exporter监控使用密码 |
 | mysqld_exporter_port | mysqld_exporter监控端口 |
+| max_connections | 最大连接数 |
+| lower_case_table_names | 表名区分大小写 |
+| wait_timeout | 连接超时时间 |
+| long_query_time | 慢查询时间 |
+| innodb_buffer_pool_size | innodb 缓冲池字节大小 |
 
 monitor主机组配置参数：
 
@@ -201,6 +213,7 @@ Global 配置参数：
 | mysql_user | mysql用户名 |
 | mysql_passwd | mysql密码 |
 | node_exporter_port | node_exporter端口 |
+| radon_release | radon release版本号 |
 
 ## 下载安装包
 
